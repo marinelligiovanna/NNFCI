@@ -26,6 +26,7 @@ private:
    double losses;                // Num. of times that the price reached the SL 
    double wins;                   // Num. of times that the price reached the TP
    int numTrades;                // Num. of trades. Used mostly to create arrows to identify buy or sells on chart.
+   bool hasOrderOpen;
    
    void alert(string msg);
    void resetOrder(void);
@@ -55,6 +56,7 @@ CrossEA::CrossEA()
    order = new Order();
    candle = new Candle();
    numTrades = 0;
+   hasOrderOpen = false;
   }
   
 //Sets the value of the candle object. The candle is mainly used for checking if the stop loss or
@@ -71,12 +73,14 @@ CrossEA::checkSLandTP(void){
    if(order.reachedStopLoss(candle)){
       resetOrder();
       countLoss();
+      hasOrderOpen = false;
       alert("The price has reached the SL level! The current win rate is " + (string) getWinRate());
    }
    
    if(order.reachedTakeProfit(candle)){
       resetOrder();
       countWin();
+      hasOrderOpen = false;
       alert("The price has reached the TP level! The current win rate is " + (string) getWinRate());
    }
 }
@@ -127,25 +131,29 @@ void CrossEA::sendNewOrder(double atrIndVal, double closePriceVal){
    double atrTp = 1.0 * atrIndVal;
    double sl = DBL_MIN;
    double tp = DBL_MAX;
+  
    
    if(position == LONG){
       sl = closePriceVal - atrSl;
       tp = closePriceVal + atrTp;
          
       alert("Sending a BUY order @ " + (string) closePriceVal + ". The SL level is Price - 1.5xATR = " + (string) sl + " and a TP level is Price + 1.0xATR = " + (string) tp); 
-      ObjectCreate(0,"Buy point - " + (string)numTrades,OBJ_ARROW_BUY,0,TimeCurrent(),closePriceVal);               
+      //ObjectCreate(0,"Buy point - " + (string)numTrades,OBJ_ARROW_BUY,0,TimeCurrent(),closePriceVal);               
+      hasOrderOpen = true;
    }
    else if(position == SHORT){
       sl = closePriceVal + atrSl;
       tp = closePriceVal - atrTp;
       
       alert("Sending a SELL order @ " + (string) closePriceVal + ". The SL level is Price + 1.5xATR = " + (string) sl + " and a TP level is Price - 1.0xATR = " + (string) tp);
-      ObjectCreate(0,"Sell point"+ (string)numTrades,OBJ_ARROW_SELL,0,TimeCurrent(),closePriceVal);   
+      //ObjectCreate(0,"Sell point"+ (string)numTrades,OBJ_ARROW_SELL,0,TimeCurrent(),closePriceVal);   
+      hasOrderOpen = true;
    }
    
    if(position != NEUTRAL){
       order = new Order(position, closePriceVal, tp, sl);
       numTrades++;
+      
    }
 }
 
@@ -153,30 +161,36 @@ CrossEA::closeOrder(void){
    double orderPrice = order.getPrice();
    double closePrice = candle.getClose();
    
-   if(prevPosition == NEUTRAL)  return;
+   if(prevPosition == NEUTRAL || !hasOrderOpen)  return;
 
    
    // Checks if the order was a win or a loss and count the result.      
    if(prevPosition == LONG){
       
-      if(orderPrice > closePrice) {
+      if(orderPrice < closePrice) {
          countWin();
          alert("Your LONG order was closed with a GAIN. The current win rate is " +  (string)getWinRate());
-      } else if (orderPrice < closePrice){
+      } else if (orderPrice > closePrice){
          countLoss();
          alert("Your LONG order was closed with a LOSS. The current win rate is " +  (string)getWinRate());
-      }else {
+      }
       
-         if(orderPrice < closePrice){
+      hasOrderOpen = false;
+   
+   }
+   
+   if(prevPosition == SHORT) {
+      
+         if(orderPrice > closePrice){
              countWin();
             alert("Your SHORT order was closed with a GAIN. The current win rate is " + (string)getWinRate());
-         } else if (orderPrice > closePrice){
+         } else if (orderPrice < closePrice){
             countLoss();
             alert("Your SHORT order was closed with a LOSS. The current win rate is " +  (string)getWinRate());
          }
+         
+         hasOrderOpen = false;
       
-      }
-
    }
    
 }
