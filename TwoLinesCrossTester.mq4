@@ -57,22 +57,25 @@ void OnTick()
    // previous candle close (shift = 1)
    if(prevTime == NULL){
       setValues(1);
-   }
-
-   // Only acts at the open of the next candle (Aprox. close of the prev candle)
+   } 
+     
+   // Only open position at the open of the next candle (Aprox. close of the prev candle)
    if(prevTime != Time[0]){
    
       ea.setIndicators(longInd, shortInd);
             
       if(ea.mustSendOrder()){
-         ea.sendOrder(atr, close);
+         ea.closeOrder();
+         ea.sendNewOrder(atr, close);
       }
          
      prevTime = Time[0];
    }
    
-   // Set values for next calculation
+   // Set values of indicators and candle and check if the order has reached
+   // the SL or TP levels. 
    setValues(0);
+   ea.checkSLandTP();
       
   }
 

@@ -39,11 +39,12 @@ public:
    void checkSLandTP(void);
    void setIndicators(double longIndVal,double shortIndVal);
    bool mustSendOrder();
-   void sendOrder(double atrIndVal, double closePriceVal);
+   void sendNewOrder(double atrIndVal, double closePriceVal);
    double getWinRate(void);
    double getLosses(void);
    double getWins(void);
    void showTestResult(void);
+   void closeOrder(void);
   };
   
 CrossEA::CrossEA()
@@ -60,7 +61,7 @@ CrossEA::CrossEA()
 // take profit levels has been reached.
 CrossEA::setCandle(double openVal, double highVal, double lowVal, double closeVal){
    candle.set(openVal, highVal, lowVal, closeVal);
-   checkSLandTP();
+   //checkSLandTP();
  }
 
 
@@ -120,7 +121,7 @@ bool CrossEA::mustSendOrder(void){
  
 // Creates a new order @closePriceVal setting the TP and SL value
 // using the ATR.
-void CrossEA::sendOrder(double atrIndVal, double closePriceVal){
+void CrossEA::sendNewOrder(double atrIndVal, double closePriceVal){
  
    double atrSl = 1.5 * atrIndVal;
    double atrTp = 1.0 * atrIndVal;
@@ -131,14 +132,14 @@ void CrossEA::sendOrder(double atrIndVal, double closePriceVal){
       sl = closePriceVal - atrSl;
       tp = closePriceVal + atrTp;
          
-      alert("I am sending a BUY order @ " + (string) closePriceVal + ". The SL level is Price - 1.5xATR = " + (string) sl + " and a TP level is Price + 1.0xATR = " + (string) tp); 
+      alert("Sending a BUY order @ " + (string) closePriceVal + ". The SL level is Price - 1.5xATR = " + (string) sl + " and a TP level is Price + 1.0xATR = " + (string) tp); 
       ObjectCreate(0,"Buy point - " + (string)numTrades,OBJ_ARROW_BUY,0,TimeCurrent(),closePriceVal);               
    }
    else if(position == SHORT){
       sl = closePriceVal + atrSl;
       tp = closePriceVal - atrTp;
       
-      alert("I am sending a SELL order @ " + (string) closePriceVal + ". The SL level is Price + 1.5xATR = " + (string) sl + " and a TP level is Price - 1.0xATR = " + (string) tp);
+      alert("Sending a SELL order @ " + (string) closePriceVal + ". The SL level is Price + 1.5xATR = " + (string) sl + " and a TP level is Price - 1.0xATR = " + (string) tp);
       ObjectCreate(0,"Sell point"+ (string)numTrades,OBJ_ARROW_SELL,0,TimeCurrent(),closePriceVal);   
    }
    
@@ -146,6 +147,38 @@ void CrossEA::sendOrder(double atrIndVal, double closePriceVal){
       order = new Order(position, closePriceVal, tp, sl);
       numTrades++;
    }
+}
+
+CrossEA::closeOrder(void){
+   double orderPrice = order.getPrice();
+   double closePrice = candle.getClose();
+   
+   if(prevPosition == NEUTRAL)  return;
+
+   
+   // Checks if the order was a win or a loss and count the result.      
+   if(prevPosition == LONG){
+      
+      if(orderPrice > closePrice) {
+         countWin();
+         alert("Your LONG order was closed with a GAIN. The current win rate is " +  (string)getWinRate());
+      } else if (orderPrice < closePrice){
+         countLoss();
+         alert("Your LONG order was closed with a LOSS. The current win rate is " +  (string)getWinRate());
+      }else {
+      
+         if(orderPrice < closePrice){
+             countWin();
+            alert("Your SHORT order was closed with a GAIN. The current win rate is " + (string)getWinRate());
+         } else if (orderPrice > closePrice){
+            countLoss();
+            alert("Your SHORT order was closed with a LOSS. The current win rate is " +  (string)getWinRate());
+         }
+      
+      }
+
+   }
+   
 }
 
 // Calculates and return the EA win rate.
