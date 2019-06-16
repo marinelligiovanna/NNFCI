@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                          ZeroLineCrossTester.mq4 |
+//|                                          TwoLinesCrossTester.mq4 |
 //|                        Copyright 2019, MetaQuotes Software Corp. |
 //|                                             https://www.mql4.com |
 //+------------------------------------------------------------------+
@@ -9,11 +9,11 @@
 #property strict
 
 
-#include "./CrossEA.mqh"
+#include "./ChartIndicatorTestEA.mqh"
 
-input string indicator_name = "kuskus-starlight-indicator";
-input int indicator_buffer_num = 0;
-input int zero_line_value = 0.0;
+input string indicator_name = "kalman-filter-indicator";
+input int long_buffer_num = 0;
+input int short_buffer_num = 1;
 input int atr_periods = 14;
 
 datetime prevTime;
@@ -22,9 +22,10 @@ double high;
 double low;
 double close;
 double atr;
-double indicator;
+double longInd;
+double shortInd;
 
-CrossEA* ea;
+ChartIndicatorTestEA* ea;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -32,9 +33,9 @@ CrossEA* ea;
 int OnInit()
   {
 //---
-   printf("Initializing the Zero Line Cross EA");
+   printf("Initializing the Chart Indicator Tester EA");
    
-   ea = new CrossEA();
+   ea = new ChartIndicatorTestEA();
 //---
    return(INIT_SUCCEEDED);
   }
@@ -52,7 +53,7 @@ void OnDeinit(const int reason)
 void OnTick()
   {
   
-  // Initialize candle and indicators with the values of the
+   // Initialize candle and indicators with the values of the
    // previous candle close (shift = 1)
    if(prevTime == NULL){
       setValues(1);
@@ -61,7 +62,7 @@ void OnTick()
    // Only open position at the open of the next candle (Aprox. close of the prev candle)
    if(prevTime != Time[0]){
    
-      ea.setIndicators(indicator, zero_line_value);
+      ea.setIndicators(longInd, shortInd);
             
       if(ea.mustSendOrder()){
          ea.closeOrder();
@@ -90,7 +91,10 @@ void setValues(int shift){
    
    // Set indicators
    atr = iATR(Symbol(), 0, atr_periods, shift); 
-   indicator = iCustom(Symbol(), 0, indicator_name,indicator_buffer_num, shift);
+   longInd = iCustom(Symbol(), 0, indicator_name,long_buffer_num, shift);
+   shortInd = iCustom(Symbol(), 0, indicator_name,short_buffer_num, shift);
+   
+   //shortInd = longInd != EMPTY_VALUE ? EMPTY_VALUE : shortInd;
    
 }
 
