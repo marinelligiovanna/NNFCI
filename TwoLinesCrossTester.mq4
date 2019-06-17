@@ -11,9 +11,9 @@
 
 #include "./CrossEA.mqh"
 
-input string indicator_name = "AbsoluteStrenghtHisto_v1";
-input int long_buffer_num = 2;
-input int short_buffer_num = 3;
+input string indicator_name = "Trend";
+input int long_buffer_num = 0;
+input int short_buffer_num = 1;
 input int atr_periods = 14;
 
 datetime prevTime;
