@@ -8,8 +8,9 @@
 #property version   "1.00"
 #property strict
 
+#define INDICATORS_PATH "../Indicators/"
 
-#include "./ChartIndicatorTestEA.mqh"
+#include "../Include/ChartIndicatorTestEA.mqh"
 
 input string indicator_name = "kalman-filter-indicator";
 input int long_buffer_num = 0;
@@ -91,8 +92,8 @@ void setValues(int shift){
    
    // Set indicators
    atr = iATR(Symbol(), 0, atr_periods, shift); 
-   longInd = iCustom(Symbol(), 0, indicator_name,long_buffer_num, shift);
-   shortInd = iCustom(Symbol(), 0, indicator_name,short_buffer_num, shift);
+   longInd = iCustom(Symbol(), 0, INDICATORS_PATH + indicator_name,long_buffer_num, shift);
+   shortInd = iCustom(Symbol(), 0, INDICATORS_PATH + indicator_name,short_buffer_num, shift);
    
    //shortInd = longInd != EMPTY_VALUE ? EMPTY_VALUE : shortInd;
    

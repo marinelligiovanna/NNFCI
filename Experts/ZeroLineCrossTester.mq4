@@ -7,9 +7,9 @@
 #property link      "https://www.mql4.com"
 #property version   "1.00"
 #property strict
+#define INDICATORS_PATH "../Indicators/"
 
-
-#include "./CrossEA.mqh"
+#include "../Include/CrossEA.mqh"
 
 input string indicator_name = "kuskus-starlight-indicator";
 input int indicator_buffer_num = 0;
@@ -90,7 +90,7 @@ void setValues(int shift){
    
    // Set indicators
    atr = iATR(Symbol(), 0, atr_periods, shift); 
-   indicator = iCustom(Symbol(), 0, indicator_name,indicator_buffer_num, shift);
+   indicator = iCustom(Symbol(), 0, INDICATORS_PATH + indicator_name,indicator_buffer_num, shift);
    
 }
 
